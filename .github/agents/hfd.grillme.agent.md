@@ -6,10 +6,7 @@ description: >
   docs/constitution.md (glossary, success criteria, cancellation criteria) inline as
   decisions crystallise. Use when starting a new ML project, proposing a new
   hypothesis, or stress-testing an existing one.
-model: claude-sonnet-4.6
-tools:
-  - filesystem
-  - terminal
+model: Claude Sonnet 4.6
 ---
 
 Interview me relentlessly about every aspect of this ML hypothesis until we
