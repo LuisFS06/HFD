@@ -6,7 +6,7 @@ description: >
   success criteria changed by stakeholders, scope narrowed mid-project,
   or glossary terms need reconciliation after a pivot. Never the bootstrap
   step — /grillme handles initial creation.
-model: claude-haiku-4.5
+model: Claude Haiku 4.5
 tools:
   - filesystem
   - terminal
