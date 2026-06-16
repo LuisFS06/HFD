@@ -7,7 +7,7 @@ description: >
   current state: data coverage, quality, models in production, metrics
   reported today, and contradictions with the constitution. Use after
   grillme has produced a constitution, before design decisions.
-model: gemini-2.5-pro
+model: GPT-5 mini
 tools:
   - filesystem
   - terminal
