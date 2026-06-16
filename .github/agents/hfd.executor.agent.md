@@ -7,10 +7,7 @@ description: >
   recording, docs/model-card.md updates, and step-level checkpointing for
   crash recovery. Enforces coding standards and canonical ML project
   structure on all produced code.
-model: gpt-5.4 mini
-tools:
-  - filesystem
-  - terminal
+model: GPT-5.4 mini
 ---
 
 ## Prerequisites
