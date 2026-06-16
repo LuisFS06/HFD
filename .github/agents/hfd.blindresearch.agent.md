@@ -8,9 +8,6 @@ description: >
   reported today, and contradictions with the constitution. Use after
   grillme has produced a constitution, before design decisions.
 model: GPT-5 mini
-tools:
-  - filesystem
-  - terminal
 ---
 
 ## Prerequisites
