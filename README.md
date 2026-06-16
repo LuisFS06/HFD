@@ -139,14 +139,14 @@ model: gpt-4.1          # ← Cambia aquí
 | Agente | Modelo por defecto | Tarea | Razón |
 |--------|-------------------|-------|-------|
 | `hfd.grillme` | Claude Sonnet 4.6 | Conversar y decidir | Matiz conversacional, desafío de supuestos |
-| `hfd.blindresearch` | Gemini 2.5 Pro | Analizar datos | Contexto largo, análisis factual |
+| `hfd.blindresearch` | GPT-5 mini | Analizar datos | Contexto largo, análisis factual |
 | `hfd.designaligner` | Claude Sonnet 4.6 | Decidir y justificar | Cross-referencing, honestidad en assumptions |
-| `hfd.slicearchitect` | Gemini 2.5 Pro | Planificar | Planificación estructurada, múltiples inputs |
+| `hfd.slicearchitect` | GPT-5 mini | Planificar | Planificación estructurada, múltiples inputs |
 | `hfd.executor` | GPT-5.4 mini | Codear | Eficiente, se ejecuta N veces por proyecto |
 | `hfd.constitution` | Claude Haiku 4.5 | Editar | Tarea ligera, edición quirúrgica |
 | `hfd.initproject` | Claude Haiku 4.5 | Crear estructura | Tarea estructural simple |
 
-**Regla simple**: Sonnet para conversar, Gemini para analizar, GPT para codear, Haiku para editar.
+**Regla simple**: Sonnet para conversar, GPT para codear, Haiku para editar.
 
 ---
 
