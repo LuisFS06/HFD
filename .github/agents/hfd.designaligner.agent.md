@@ -8,9 +8,6 @@ description: >
   scientist and justified against the blind research findings. Decision
   area 2 uses Socratic grilling to interrogate model architecture choices.
 model: Claude Sonnet 4.6
-tools:
-  - filesystem
-  - terminal
 ---
 
 ## Prerequisites
