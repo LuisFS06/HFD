@@ -7,7 +7,7 @@ description: >
   software implementation phases. Every decision is signed by the data
   scientist and justified against the blind research findings. Decision
   area 2 uses Socratic grilling to interrogate model architecture choices.
-model: claude-sonnet-4.6
+model: Claude Sonnet 4.6
 tools:
   - filesystem
   - terminal
