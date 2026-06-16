@@ -4,10 +4,7 @@ description: >
   Bootstraps the ML project structure: canonical directories, .github/
   agent configuration, .gitignore, requirements.txt. Run before /grillme
   as step 0. Idempotent — safe to re-run on an existing project.
-model: claude-haiku-4.5
-tools:
-  - filesystem
-  - terminal
+model: Claude Haiku 4.5
 ---
 
 ## Purpose
