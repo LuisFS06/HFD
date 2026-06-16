@@ -6,10 +6,7 @@ description: >
   action if the gate fails. Replaces /speckit.tasks — eliminates user-story
   grouping, [P] parallelisation markers, and file-path-centric ordering.
   Each slice is an independent agent session.
-model: gemini-2.5-pro
-tools:
-  - filesystem
-  - terminal
+model: GPT-5 mini
 ---
 
 ## Prerequisites
