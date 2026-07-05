@@ -42,6 +42,6 @@ thousands.
 Load only what the current skill declares in its "Context contract" section.
 Use the extraction scripts instead of whole files:
 
-- `python .claude/skills/hfd-shared/scripts/hfd_status.py` — project state in ~30 lines
-- `python .claude/skills/hfd-shared/scripts/get_slice.py N` — one slice, not the whole plan
-- `python .claude/skills/hfd-shared/scripts/experiment.py best --metric AUC` — the number to beat
+- `python .hfd/scripts/hfd_status.py` — project state in ~30 lines
+- `python .hfd/scripts/get_slice.py N` — one slice, not the whole plan
+- `python .hfd/scripts/experiment.py best --metric AUC` — the number to beat

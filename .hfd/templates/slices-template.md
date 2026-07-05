@@ -11,7 +11,7 @@
 
 <!--
 Escrito una sola vez por /hfd-slices. Describe el PLAN, no el estado.
-El estado vivo se consulta con: python .claude/skills/hfd-shared/scripts/hfd_status.py
+El estado vivo se consulta con: python .hfd/scripts/hfd_status.py
 -->
 
 - **Total de slices**: {N} planificados

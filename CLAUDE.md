@@ -22,8 +22,8 @@ re-open a decision → `/hfd-design revisit <N>`.
    immutable after creation — new content is appended at the END, never
    edited mid-file. Volatile state (checkpoints, gate results, experiment
    ledger) lives in `docs/state/` and is written ONLY through
-   `.claude/skills/hfd-shared/scripts/` (checkpoint.py, experiment.py).
-   Details: `.claude/skills/hfd-shared/references/state-and-caching.md`.
+   `.hfd/scripts/` (checkpoint.py, experiment.py).
+   Details: `.hfd/references/state-and-caching.md`.
 2. **Scripts before prose**: project status via `hfd_status.py`, slice
    extraction via `get_slice.py`, data profiles via `profile_data.py` —
    never derive these by reading and summarizing whole documents.

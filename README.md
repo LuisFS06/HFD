@@ -1,10 +1,11 @@
 # Hypothesis-First Development (HFD)
 
-> Un flujo de trabajo para ciencia de datos implementado como **skills de
-> Claude Code**. Reemplaza el ciclo de vida de ingeniería de software con
-> uno nativo de ML: hipótesis falsable → investigación ciega → decisiones
-> de diseño → slices verticales con gates cuantitativos → **loop
-> incremental de experimentos**.
+> Un flujo de trabajo para ciencia de datos implementado como **Agent
+> Skills** — el mismo formato abierto (SKILL.md) funciona en **Claude
+> Code** y en **GitHub Copilot**. Reemplaza el ciclo de vida de ingeniería
+> de software con uno nativo de ML: hipótesis falsable → investigación
+> ciega → decisiones de diseño → slices verticales con gates
+> cuantitativos → **loop incremental de experimentos**.
 
 ---
 
@@ -28,7 +29,7 @@ después. Esta versión está diseñada con principios de harness engineering:
 
 1. **Scripts deterministas en vez de tokens.** El scaffolding, el
    dashboard de estado, el perfilado de datos, los checkpoints y el ledger
-   de experimentos los hacen scripts de Python (`.claude/skills/hfd-shared/scripts/`),
+   de experimentos los hacen scripts de Python (`.hfd/scripts/`),
    no el LLM. El modelo interpreta resultados; no reinventa pandas cada sesión.
 
 2. **Documentos de planificación inmutables = prompt cache estable.** Los
@@ -37,7 +38,7 @@ después. Esta versión está diseñada con principios de harness engineering:
    estado volátil (checkpoints, gates, iteraciones) vive en `docs/state/`
    en archivos chicos gestionados por scripts. Resultado: los inputs
    grandes quedan byte-idénticos entre sesiones y el caching de prompts
-   realmente amortiza. Detalle: [state-and-caching.md](.claude/skills/hfd-shared/references/state-and-caching.md).
+   realmente amortiza. Detalle: [state-and-caching.md](.hfd/references/state-and-caching.md).
 
 3. **Trabajo incremental como camino de primera clase.** Ya no hace falta
    re-correr el flujo completo para un cambio chico:
@@ -81,21 +82,47 @@ después. Esta versión está diseñada con principios de harness engineering:
 
 ## Instalación
 
-Requisito: [Claude Code](https://claude.com/claude-code) y Python ≥ 3.10.
+Requisito: Python ≥ 3.10 y [Claude Code](https://claude.com/claude-code)
+**o** [GitHub Copilot](https://github.com/features/copilot).
+
+Las skills son idénticas en ambas plataformas — mismo formato SKILL.md,
+mismos scripts. Solo cambia la carpeta donde cada herramienta las busca.
 
 ```bash
-# Copiar al proyecto destino
 cd /ruta/a/tu-proyecto-ml
+
+# Común a ambas plataformas (scripts, templates, referencias)
+cp -r /ruta/a/HFD/.hfd ./.hfd
+mkdir -p docs && cp /ruta/a/HFD/docs/coding-standards.md ./docs/
+
+# Claude Code
 cp -r /ruta/a/HFD/.claude ./.claude
 cp /ruta/a/HFD/CLAUDE.md ./CLAUDE.md
-mkdir -p docs && cp /ruta/a/HFD/docs/coding-standards.md ./docs/
+
+# GitHub Copilot (skills espejo + prompts /hfd-* + instrucciones globales)
+cp -r /ruta/a/HFD/.github ./.github
 ```
 
-Verificar: abrir Claude Code en el proyecto y correr `/hfd-status`.
+Verificar: correr `/hfd-status` en el chat de tu herramienta.
 
-> Los archivos de `.github/` (agentes de GitHub Copilot) se mantienen como
-> versión legacy para quien siga en Copilot, pero ya no reciben mejoras.
-> La fuente de verdad es `.claude/skills/`.
+### Un solo código, dos plataformas
+
+La copia canónica de las skills vive en `.claude/skills/`;
+`.github/skills/` es un espejo generado con
+`python .hfd/scripts/sync_skills.py` (usar `--check` en CI para detectar
+drift). Los `.github/prompts/hfd-*.prompt.md` son wrappers de una línea
+que exponen cada skill como slash command en Copilot y fijan el modelo
+óptimo por costo:
+
+| Paso | Modelo (Copilot) | Razón |
+|------|------------------|-------|
+| /hfd-init, /hfd-status, /hfd-constitution | Claude Haiku 4.5 | Tareas ligeras — casi todo lo hace un script |
+| /hfd-grill, /hfd-design | Claude Sonnet 4.6 | Matiz conversacional, grilling socrático |
+| /hfd-research, /hfd-slices | GPT-5 mini | Análisis factual y planificación estructurada |
+| /hfd-run, /hfd-experiment | GPT-5.4 mini | Codean y se ejecutan N veces por proyecto |
+
+En Claude Code el modelo se fija con el campo `model` del frontmatter de
+cada skill (ya configurado en las que lo necesitan).
 
 ---
 
@@ -151,7 +178,7 @@ Regla: **agregar al final, nunca editar el medio**. Un prefijo estable es
 un prefijo cacheado. Por eso los resúmenes ejecutivos describen el plan,
 nunca el estado vivo — el estado vivo se consulta con `/hfd-status`.
 
-### Scripts compartidos (`.claude/skills/hfd-shared/scripts/`)
+### Scripts compartidos (`.hfd/scripts/`)
 
 | Script | Hace | Lo usa |
 |--------|------|--------|
@@ -161,6 +188,7 @@ nunca el estado vivo — el estado vivo se consulta con `/hfd-status`.
 | `get_slice.py` | Extrae UN slice del plan | /hfd-run |
 | `checkpoint.py` | Estado de slices: add-slice/start/step/gate/iterate/note | /hfd-slices, /hfd-run |
 | `experiment.py` | Ledger: add/best/show con delta contra el mejor | /hfd-experiment |
+| `sync_skills.py` | Espeja `.claude/skills/` → `.github/skills/` (`--check` para CI) | mantenimiento del preset |
 
 Crash recovery: si `/hfd-run` se interrumpe, la próxima invocación lee
 `slices.json`, verifica que los artefactos de pasos completados existan en
@@ -214,10 +242,14 @@ que no puede inferir:
 **¿Puedo saltarme pasos?** Cada skill verifica sus prerequisitos y te dice
 qué comando correr primero. `/hfd-status` siempre sabe qué sigue.
 
-**¿Puedo usar esto sin Claude Code?** Los SKILL.md son markdown con
-instrucciones; sirven como system prompt en cualquier LLM. Los scripts de
-`hfd-shared/scripts/` funcionan solos con Python. La carpeta `.github/`
-conserva la versión legacy para GitHub Copilot.
+**¿Puedo usar esto sin Claude Code ni Copilot?** Los SKILL.md son markdown
+con instrucciones; sirven como system prompt en cualquier LLM. Los scripts
+de `.hfd/scripts/` funcionan solos con Python.
+
+**¿Copilot y Claude Code se comportan igual?** Sí — ambos cargan
+exactamente el mismo SKILL.md (espejado con `sync_skills.py`) y llaman
+los mismos scripts. En Copilot además los `.github/prompts/` fijan un
+modelo por paso para optimizar credits.
 
 **¿Por qué los documentos no muestran el estado actual?** Para que el
 prompt cache los amortice. El estado vive en `docs/state/` y se consulta
