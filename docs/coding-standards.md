@@ -1,7 +1,12 @@
 # ML Coding Standards
 
-> Referenced by `/ml.executor`. Read before writing any code during
-> slice execution. Non-negotiable — no exceptions for "quick experiments."
+> Read before writing any code — slice execution (`/hfd-run`), experiments
+> (`/hfd-experiment`), daily features (`/hfd-feature`) and analyses
+> (`/hfd-analyze`). Non-negotiable, including for "quick experiments".
+>
+> This file is `frozen` in `.hfd/context.json`: it is loaded by almost every
+> skill, so it must stay byte-stable. Changes are rare and deliberate, and
+> are followed by `python .hfd/scripts/context.py freeze`.
 
 ## Principles
 
@@ -112,3 +117,26 @@ Rules for placement:
 If existing code you must modify violates SOLID, refactor only the
 function you are modifying. Do not refactor callers or sibling functions.
 YAGNI applies to refactoring scope — fix what you touch, leave the rest.
+
+## Analysis code (`src/analysis/`)
+
+An analysis module answers exactly one question and is judged by whether
+someone else gets the same number tomorrow:
+
+- Runs end to end from `data/` with no manual steps and no hidden state.
+- Prints the headline number **with n and the date range**; a number
+  without its denominator is not an answer.
+- Filters, windows, exclusions and tolerances are named constants at the
+  top of the module.
+- Exposes a `--check` mode that recomputes the number and exits non-zero if
+  it moved beyond the declared tolerance — this is the command recorded in
+  the work ledger and re-run by `worklog.py recheck`.
+- Uses the definition in `docs/data-contracts.md` verbatim; SQL lives in
+  `sql/`, one query per file, read by the script.
+
+## Verification
+
+Every behavioural change ships with the command that proves it: a numeric
+gate for a slice or experiment, a stored verification command for a work
+unit. Write the failing test first — a test that never failed proves
+nothing. Never weaken a test to make it pass.

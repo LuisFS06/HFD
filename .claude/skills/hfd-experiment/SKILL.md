@@ -8,7 +8,18 @@ description: >
   change ("add feature X", "try lr=0.05", "would dropping nulls help?")
   instead of re-running the planning skills.
 argument-hint: "<one-line change to try> [--metric AUC]"
+copilot-model: GPT-5.4 mini
 ---
+
+Start by loading exactly what this skill declares — no more, in this order:
+
+```
+python .hfd/scripts/context.py pack hfd-experiment
+```
+
+The manifest is generated from `.hfd/context.json`; the order is what keeps
+the stable inputs byte-identical between sessions, which is what makes them
+cacheable.
 
 This is the day-to-day workhorse once slices have produced a baseline.
 No new docs, no plan rewrite, no re-grilling — one change, one number,
@@ -21,7 +32,9 @@ At least one slice with status `pass` (check via `hfd_status.py`). If
 there is no baseline yet, redirect to `/hfd-run`. If the proposed change
 actually tests a NEW aspect of the hypothesis (new data source, new
 target, new model family), redirect to `/hfd-slices add` — experiments
-refine, slices validate.
+refine, slices validate. If it does not move a metric at all (a pipeline
+feature, a fix, a refactor, a report), it belongs to `/hfd-feature`: the
+experiment ledger is for numbers that beat other numbers.
 
 ## Loop
 
@@ -84,3 +97,7 @@ specific files being changed, coding-standards. Do NOT load: constitution,
 hypothesis-doc, blind-research, design-decisions, prd-slices — the ledger
 and state files carry everything this loop needs. This is what keeps
 incremental iterations cheap.
+
+This contract is machine-readable in `.hfd/context.json`:
+`context.py pack hfd-experiment` prints it, estimates its cost, and
+flags anything over budget.

@@ -1,6 +1,6 @@
 ---
 description: "Coding standards for Python ML code — auto-applied to src/ and tests/"
-applyTo: "src/**/*.py,tests/**/*.py,*.py"
+applyTo: "src/**/*.py,tests/**/*.py,main.py"
 ---
 
 ## Formatting
@@ -37,6 +37,13 @@ to refactoring scope.
 
 ## Notebook rule
 
-Notebooks are for exploration and visualization ONLY. If a slice
-involves exploration in a notebook, extract all reusable functions to
-`src/` before the slice is marked complete.
+Notebooks are for exploration and visualization ONLY. If a slice or work
+unit involves exploration in a notebook, extract all reusable functions to
+`src/` before it is marked complete.
+
+## Verification
+
+Every behavioural change ships with the command that proves it: a slice has
+its numeric gate, a work unit has the verification command recorded in
+`docs/state/worklog.jsonl`. Write the failing test before the fix — a test
+that never failed proves nothing.

@@ -7,7 +7,18 @@ description: >
   Use after /hfd-research, or "revisit <N>" to re-open a single signed
   decision when reality changed (new data, failed slice, pivot).
 argument-hint: "[team experience, concerns, constraints] | revisit <decision N>"
+copilot-model: Claude Sonnet 4.6
 ---
+
+Start by loading exactly what this skill declares — no more, in this order:
+
+```
+python .hfd/scripts/context.py pack hfd-design
+```
+
+The manifest is generated from `.hfd/context.json`; the order is what keeps
+the stable inputs byte-identical between sessions, which is what makes them
+cacheable.
 
 ## Prerequisites
 
@@ -95,3 +106,7 @@ Load: constitution + hypothesis-doc + blind-research (+ its addenda) +
 decisions made so far this session. Do NOT load prd-slices, docs/state/,
 or execution artifacts. In revisit mode, load only the named decision and
 related findings, not the whole decision doc.
+
+This contract is machine-readable in `.hfd/context.json`:
+`context.py pack hfd-design` prints it, estimates its cost, and
+flags anything over budget.
