@@ -8,6 +8,7 @@ description: >
   an ML repo.
 argument-hint: "[--frameworks xgboost,lightgbm] [--tracking mlflow|dvc|both]"
 model: haiku
+copilot-model: Claude Haiku 4.5
 ---
 
 Scaffolding is deterministic — a script does all of it. Do not create the
@@ -46,3 +47,7 @@ tree by hand and do not write placeholder files yourself.
 ## Context contract
 
 Load: nothing beyond the script output. Do not read the created files back.
+
+This contract is machine-readable in `.hfd/context.json`:
+`context.py pack hfd-init` prints it, estimates its cost, and
+flags anything over budget.

@@ -1,0 +1,391 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "version": 2,
+  "description": "HFD context registry. Single source of truth for what each skill may load, in which order, and how cache-stable each input is. A ref prefixed with '?' is optional: used when present, silently skipped when the project does not have it. Read by .hfd/scripts/context.py; never hand-edited during a session.",
+  "token_estimator": "chars/4",
+  "tiers": {
+    "frozen": {
+      "order": 0,
+      "cache": "stable",
+      "mutable": false,
+      "doc": "Never changes after creation. Perfect cache prefix - load these first, always."
+    },
+    "append-only": {
+      "order": 1,
+      "cache": "prefix-stable",
+      "mutable": "append",
+      "doc": "Grows only at the END of the file. Everything before the append stays byte-identical, so the cached prefix survives."
+    },
+    "revisable": {
+      "order": 2,
+      "cache": "breaks-on-change",
+      "mutable": true,
+      "doc": "Edited in place, rarely and deliberately. Each edit invalidates the cache from that file onward - which is why only /hfd-constitution may touch it."
+    },
+    "volatile": {
+      "order": 3,
+      "cache": "none",
+      "mutable": true,
+      "doc": "Rewritten constantly by scripts. Kept tiny so re-reading costs hundreds of tokens, not thousands. Always loaded LAST so it never sits inside the cacheable prefix."
+    },
+    "probe": {
+      "order": 4,
+      "cache": "none",
+      "mutable": true,
+      "doc": "Command output computed on demand (status, one slice, best metric). Cheaper than the document it summarizes."
+    },
+    "task": {
+      "order": 5,
+      "cache": "none",
+      "mutable": true,
+      "doc": "The files this specific task touches. Unknowable ahead of time, never cached."
+    }
+  },
+  "artifacts": {
+    "coding-standards": {
+      "path": "docs/coding-standards.md",
+      "tier": "frozen",
+      "owner": "preset",
+      "doc": "Code rules for src/ and analysis scripts."
+    },
+    "constitution": {
+      "path": "docs/constitution.md",
+      "tier": "revisable",
+      "owner": "/hfd-grill",
+      "revised_by": "/hfd-constitution",
+      "sections": [
+        "Resumen ejecutivo",
+        "Glosario",
+        "Fuentes de datos",
+        "Criterios de exito",
+        "Criterios de cancelacion",
+        "Fuera de scope"
+      ]
+    },
+    "hypothesis-doc": {
+      "path": "docs/hypothesis-doc.md",
+      "tier": "append-only",
+      "owner": "/hfd-grill",
+      "append_marker": "## Enmienda"
+    },
+    "blind-research": {
+      "path": "docs/blind-research.md",
+      "tier": "append-only",
+      "owner": "/hfd-research",
+      "append_marker": "## Addendum"
+    },
+    "design-decisions": {
+      "path": "docs/design-decisions.md",
+      "tier": "append-only",
+      "owner": "/hfd-design",
+      "append_marker": "## Decision"
+    },
+    "model-card": {
+      "path": "docs/model-card.md",
+      "tier": "append-only",
+      "owner": "/hfd-design",
+      "append_marker": "## Actualizaciones"
+    },
+    "prd-slices": {
+      "path": "docs/prd-slices.md",
+      "tier": "append-only",
+      "owner": "/hfd-slices",
+      "append_marker": "## Slice"
+    },
+    "data-contracts": {
+      "path": "docs/data-contracts.md",
+      "tier": "append-only",
+      "owner": "/hfd-analyze",
+      "append_marker": "## Contrato",
+      "doc": "Analysis track: agreed definition of every recurring metric/segment, so two analyses never answer the same question differently."
+    },
+    "journal": {
+      "path": "docs/state/journal.md",
+      "tier": "append-only",
+      "owner": "checkpoint.py"
+    },
+    "experiments": {
+      "path": "docs/state/experiments.jsonl",
+      "tier": "append-only",
+      "owner": "experiment.py"
+    },
+    "worklog": {
+      "path": "docs/state/worklog.jsonl",
+      "tier": "append-only",
+      "owner": "worklog.py"
+    },
+    "slices-state": {
+      "path": "docs/state/slices.json",
+      "tier": "volatile",
+      "owner": "checkpoint.py"
+    },
+    "context-lock": {
+      "path": "docs/state/context-lock.json",
+      "tier": "volatile",
+      "owner": "context.py"
+    }
+  },
+  "probes": {
+    "status": {
+      "cmd": "python .hfd/scripts/hfd_status.py",
+      "est_tokens": 400,
+      "doc": "Whole-project state in ~30 lines. Replaces reading any planning doc to find out where we are."
+    },
+    "slice": {
+      "cmd": "python .hfd/scripts/get_slice.py {slice}",
+      "est_tokens": 700,
+      "params": [
+        "slice"
+      ],
+      "doc": "ONE slice section instead of the whole plan."
+    },
+    "slice-list": {
+      "cmd": "python .hfd/scripts/get_slice.py --list",
+      "est_tokens": 120
+    },
+    "best-metric": {
+      "cmd": "python .hfd/scripts/experiment.py best --metric {metric}",
+      "est_tokens": 150,
+      "params": [
+        "metric"
+      ]
+    },
+    "recent-experiments": {
+      "cmd": "python .hfd/scripts/experiment.py show --last 5",
+      "est_tokens": 200
+    },
+    "open-work": {
+      "cmd": "python .hfd/scripts/worklog.py show --open",
+      "est_tokens": 200
+    },
+    "recent-work": {
+      "cmd": "python .hfd/scripts/worklog.py show --last 5",
+      "est_tokens": 250
+    },
+    "data-profile": {
+      "cmd": "python .hfd/scripts/profile_data.py {path}",
+      "est_tokens": 900,
+      "params": [
+        "path"
+      ]
+    },
+    "verification": {
+      "cmd": "python .hfd/scripts/verify.py",
+      "est_tokens": 350
+    },
+    "cache-health": {
+      "cmd": "python .hfd/scripts/context.py verify",
+      "est_tokens": 250
+    }
+  },
+  "contracts": {
+    "hfd-init": {
+      "track": "both",
+      "budget_tokens": 2000,
+      "load": [],
+      "never": [
+        "constitution",
+        "hypothesis-doc",
+        "prd-slices"
+      ],
+      "doc": "Scaffolding is a script. The agent relays its report and loads nothing."
+    },
+    "hfd-status": {
+      "track": "both",
+      "budget_tokens": 2000,
+      "load": [
+        "probe:status"
+      ],
+      "never": [
+        "prd-slices",
+        "constitution",
+        "hypothesis-doc",
+        "blind-research",
+        "design-decisions"
+      ]
+    },
+    "hfd-context": {
+      "track": "both",
+      "budget_tokens": 3000,
+      "load": [
+        "probe:cache-health"
+      ],
+      "never": [
+        "prd-slices",
+        "hypothesis-doc",
+        "blind-research"
+      ]
+    },
+    "hfd-grill": {
+      "track": "modeling",
+      "budget_tokens": 14000,
+      "load": [
+        "constitution"
+      ],
+      "never": [
+        "blind-research",
+        "design-decisions",
+        "prd-slices",
+        "slices-state",
+        "experiments",
+        "worklog"
+      ],
+      "doc": "Templates are read at write time only, never at session start."
+    },
+    "hfd-research": {
+      "track": "both",
+      "budget_tokens": 12000,
+      "load": [
+        "constitution#Fuentes de datos",
+        "constitution#Glosario",
+        "constitution#Criterios de exito",
+        "constitution#Fuera de scope"
+      ],
+      "never": [
+        "hypothesis-doc",
+        "design-decisions",
+        "prd-slices",
+        "slices-state",
+        "model-card"
+      ],
+      "doc": "Blindness constraint: loading hypothesis-doc here is a correctness bug, not just a cost."
+    },
+    "hfd-design": {
+      "track": "modeling",
+      "budget_tokens": 20000,
+      "load": [
+        "coding-standards",
+        "constitution",
+        "hypothesis-doc",
+        "blind-research"
+      ],
+      "never": [
+        "prd-slices",
+        "slices-state",
+        "experiments",
+        "worklog",
+        "journal"
+      ]
+    },
+    "hfd-slices": {
+      "track": "modeling",
+      "budget_tokens": 22000,
+      "load": [
+        "constitution",
+        "hypothesis-doc",
+        "blind-research",
+        "design-decisions",
+        "model-card"
+      ],
+      "never": [
+        "journal",
+        "experiments",
+        "worklog"
+      ]
+    },
+    "hfd-run": {
+      "track": "modeling",
+      "budget_tokens": 15000,
+      "load": [
+        "coding-standards",
+        "constitution#Glosario",
+        "constitution#Criterios de cancelacion",
+        "probe:status",
+        "probe:slice"
+      ],
+      "never": [
+        "blind-research",
+        "hypothesis-doc",
+        "prd-slices",
+        "design-decisions",
+        "experiments"
+      ],
+      "doc": "design-decisions is loaded section-wise only when a slice names one: context.py show 'design-decisions#Decision 2'."
+    },
+    "hfd-experiment": {
+      "track": "modeling",
+      "budget_tokens": 8000,
+      "load": [
+        "coding-standards",
+        "probe:best-metric",
+        "probe:recent-experiments"
+      ],
+      "never": [
+        "constitution",
+        "hypothesis-doc",
+        "blind-research",
+        "design-decisions",
+        "prd-slices",
+        "model-card"
+      ],
+      "doc": "Flat cost per experiment: nothing from the planning layer enters context."
+    },
+    "hfd-analyze": {
+      "track": "analysis",
+      "budget_tokens": 9000,
+      "load": [
+        "coding-standards",
+        "?data-contracts",
+        "?constitution#Glosario",
+        "probe:recent-work"
+      ],
+      "never": [
+        "hypothesis-doc",
+        "blind-research",
+        "design-decisions",
+        "prd-slices",
+        "model-card",
+        "experiments"
+      ],
+      "doc": "An analysis needs metric definitions and prior findings, never the modeling plan."
+    },
+    "hfd-feature": {
+      "track": "both",
+      "budget_tokens": 9000,
+      "load": [
+        "coding-standards",
+        "probe:open-work",
+        "probe:recent-work"
+      ],
+      "never": [
+        "constitution",
+        "hypothesis-doc",
+        "blind-research",
+        "design-decisions",
+        "prd-slices",
+        "model-card"
+      ],
+      "doc": "Daily incremental development. Planning docs are loaded only if the task escalates out of this skill."
+    },
+    "hfd-review": {
+      "track": "both",
+      "budget_tokens": 6000,
+      "load": [
+        "coding-standards",
+        "probe:verification",
+        "probe:cache-health"
+      ],
+      "never": [
+        "constitution",
+        "hypothesis-doc",
+        "blind-research",
+        "prd-slices",
+        "design-decisions"
+      ]
+    },
+    "hfd-constitution": {
+      "track": "both",
+      "budget_tokens": 10000,
+      "load": [
+        "constitution"
+      ],
+      "never": [
+        "prd-slices",
+        "blind-research",
+        "design-decisions",
+        "hypothesis-doc"
+      ],
+      "doc": "Downstream docs enter context one at a time, and only when the cascade grep hits them."
+    }
+  }
+}

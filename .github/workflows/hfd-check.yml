@@ -1,0 +1,36 @@
+name: HFD harness checks
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  harness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install test dependencies
+        run: pip install pytest ruff
+
+      # The Claude and Copilot surfaces must stay identical: .claude/skills is
+      # canonical, .github/skills and .github/prompts are generated from it.
+      - name: Skills mirrored to the Copilot surface
+        run: python .hfd/scripts/sync_skills.py --check
+
+      # Turns "we append at the end" from a habit into a build failure.
+      - name: Context registry is coherent and docs stayed append-only
+        run: |
+          python .hfd/scripts/context.py budget
+          python .hfd/scripts/context.py verify
+
+      - name: Harness self-tests
+        run: python -m pytest .hfd/tests -q
+
+      - name: Lint the harness scripts
+        run: ruff check .hfd/scripts .hfd/tests

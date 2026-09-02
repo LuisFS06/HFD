@@ -8,7 +8,18 @@ description: >
   changes mid-flight.
 argument-hint: "<what changed> [verify downstream]"
 model: haiku
+copilot-model: Claude Haiku 4.5
 ---
+
+Start by loading exactly what this skill declares — no more, in this order:
+
+```
+python .hfd/scripts/context.py pack hfd-constitution
+```
+
+The manifest is generated from `.hfd/context.json`; the order is what keeps
+the stable inputs byte-identical between sessions, which is what makes them
+cacheable.
 
 ## Prerequisites
 
@@ -55,3 +66,7 @@ the only doc loaded upfront.
 
 Load: constitution + the user's declared change. Downstream docs only
 when the cascade grep hits them, one at a time.
+
+This contract is machine-readable in `.hfd/context.json`:
+`context.py pack hfd-constitution` prints it, estimates its cost, and
+flags anything over budget.

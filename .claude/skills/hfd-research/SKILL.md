@@ -7,7 +7,18 @@ description: >
   Use after /hfd-grill and before /hfd-design, or to refresh findings for
   a single source ("refresh <source>") when data changed mid-project.
 argument-hint: "[data locations / access constraints] | refresh <source>"
+copilot-model: GPT-5 mini
 ---
+
+Start by loading exactly what this skill declares — no more, in this order:
+
+```
+python .hfd/scripts/context.py pack hfd-research
+```
+
+The manifest is generated from `.hfd/context.json`; the order is what keeps
+the stable inputs byte-identical between sessions, which is what makes them
+cacheable.
 
 ## Blindness constraint (the single most important rule)
 
@@ -83,3 +94,7 @@ Header note: "> Este documento NO conoce la hipótesis propuesta."
 Load: constitution (4 sections above) + profiler output + your own
 exploration results. Do NOT load: hypothesis-doc, design-decisions,
 prd-slices, docs/state/.
+
+This contract is machine-readable in `.hfd/context.json`:
+`context.py pack hfd-research` prints it, estimates its cost, and
+flags anything over budget.

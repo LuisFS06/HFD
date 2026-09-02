@@ -7,7 +7,18 @@ description: >
   "add <goal>" to append a new slice mid-project without replanning
   (new feature idea, extra validation, post-pivot work).
 argument-hint: "[max N slices, biggest uncertainty first] | add <goal>"
+copilot-model: GPT-5 mini
 ---
+
+Start by loading exactly what this skill declares — no more, in this order:
+
+```
+python .hfd/scripts/context.py pack hfd-slices
+```
+
+The manifest is generated from `.hfd/context.json`; the order is what keeps
+the stable inputs byte-identical between sessions, which is what makes them
+cacheable.
 
 ## Prerequisites
 
@@ -88,3 +99,7 @@ multiple gate metrics → split it.
 Load: the five prerequisite docs (with the blind-research trimming rule).
 Do NOT load docs/state/ history or src/ code. In add mode, load only the
 slice list + status + touched decisions.
+
+This contract is machine-readable in `.hfd/context.json`:
+`context.py pack hfd-slices` prints it, estimates its cost, and
+flags anything over budget.

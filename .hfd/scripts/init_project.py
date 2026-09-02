@@ -6,7 +6,8 @@ requirements.txt. Never overwrites existing files. Prints a created/skipped
 report so the agent only has to relay it.
 
 Usage:
-    python init_project.py [--frameworks xgboost,lightgbm] [--tracking mlflow|dvc|both]
+    python init_project.py [--track both|modeling|analysis] \
+        [--frameworks xgboost,lightgbm] [--tracking mlflow|dvc|both]
 """
 
 import argparse
@@ -74,6 +75,12 @@ MODULES = {
         func_doc="Plot a metric series.",
         args_doc="values: Metric values.\n        title: Plot title.",
         ret_doc="None. Saves or shows the figure."),
+    "src/analysis/example_question.py": dict(
+        doc="One analysis = one script = one reproducible answer.\n\nCopy this module per question. It must run end to end from raw data and\nprint the number it claims, so /hfd-review can recompute it later.",
+        func="answer", args="source_path: Path", ret="dict",
+        func_doc="Answer one business question from raw data.",
+        args_doc="source_path: Path to the source table.",
+        ret_doc="Mapping with the headline number, the sample size and the date range."),
     "src/utils/helper_functions.py": dict(
         doc="Shared utility functions.",
         func="set_seed", args="seed: int", ret="None",
@@ -142,11 +149,58 @@ wandb/
 
 BASE_REQS = ["pandas>=2.0", "numpy>=1.24", "scikit-learn>=1.3", "pytest>=7.0"]
 
-DIRS = [
+# Shared by both tracks.
+DIRS_BASE = [
     "data/raw", "data/processed", "data/external",
     "notebooks", "tests", "docs", "docs/state",
-    "src/data", "src/features", "src/models", "src/visualization", "src/utils",
+    "src/data", "src/utils",
 ]
+# Modeling track: hypothesis -> slices -> gates.
+DIRS_MODELING = ["src/features", "src/models", "src/visualization"]
+# Analysis track: question -> reproducible script -> dated report.
+DIRS_ANALYSIS = ["src/analysis", "sql", "reports"]
+
+PKG_BASE = ["src", "src/data", "src/utils"]
+PKG_MODELING = ["src/features", "src/models", "src/visualization"]
+PKG_ANALYSIS = ["src/analysis"]
+
+MODELING_MODULES = ("src/features/build_features.py", "src/models/train_model.py",
+                    "src/models/evaluate_model.py", "src/visualization/visualize.py")
+ANALYSIS_MODULES = ("src/analysis/example_question.py",)
+
+PYPROJECT = """\
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+"""
+
+REPORTS_README = """\
+# Reports
+
+Un archivo por pregunta respondida, con fecha en el nombre:
+`YYYY-MM-DD-pregunta-corta.md`. Cada reporte declara el numero, el tamano
+de muestra, el rango de fechas, los filtros aplicados y el comando exacto
+que lo reproduce. Se registran en el ledger con:
+
+    python .hfd/scripts/worklog.py close <ID> --verified pass \\
+        --finding "..." --artifacts reports/<archivo>.md
+"""
+
+SQL_README = """\
+# SQL
+
+Consultas versionadas, una por archivo, sin resultados pegados adentro.
+Cada consulta empieza con un comentario: pregunta que responde, tablas
+fuente y granularidad de salida. Los scripts de `src/analysis/` las leen
+desde aqui en vez de embeber SQL en Python.
+"""
 
 MAIN_PY = '''"""Entry point - orchestrates the ML pipeline slice by slice.
 
@@ -166,10 +220,26 @@ if __name__ == "__main__":
 
 def main() -> int:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--track", choices=["both", "modeling", "analysis"], default="both",
+                    help="which track's directories to scaffold (default: both)")
     ap.add_argument("--frameworks", default="",
                     help="comma-separated extras appended to requirements.txt")
     ap.add_argument("--tracking", choices=["mlflow", "dvc", "both", "none"], default="none")
     args = ap.parse_args()
+
+    dirs = list(DIRS_BASE)
+    packages = list(PKG_BASE)
+    modules = {}
+    if args.track in ("both", "modeling"):
+        dirs += DIRS_MODELING
+        packages += PKG_MODELING
+        modules.update({k: v for k, v in MODULES.items()
+                        if k in MODELING_MODULES or k.startswith(("src/data/", "src/utils/"))})
+    if args.track in ("both", "analysis"):
+        dirs += DIRS_ANALYSIS
+        packages += PKG_ANALYSIS
+        modules.update({k: v for k, v in MODULES.items()
+                        if k in ANALYSIS_MODULES or k.startswith(("src/data/", "src/utils/"))})
 
     created, skipped = [], []
 
@@ -182,7 +252,7 @@ def main() -> int:
         p.write_text(content, encoding="utf-8", newline="\n")
         created.append(rel)
 
-    for d in DIRS:
+    for d in dirs:
         p = ROOT / d
         if not p.exists():
             p.mkdir(parents=True)
@@ -191,14 +261,18 @@ def main() -> int:
         if d.split("/")[0] in ("data", "notebooks", "tests", "docs") and not any(p.iterdir()):
             keep.touch()
 
-    for pkg in ("src", "src/data", "src/features", "src/models", "src/visualization", "src/utils"):
+    for pkg in packages:
         write(f"{pkg}/__init__.py", "")
 
-    for rel, spec in MODULES.items():
+    for rel, spec in modules.items():
         write(rel, PLACEHOLDER.format(**spec))
 
     write("main.py", MAIN_PY)
     write(".gitignore", GITIGNORE)
+    write("pyproject.toml", PYPROJECT)
+    if args.track in ("both", "analysis"):
+        write("reports/README.md", REPORTS_README)
+        write("sql/README.md", SQL_README)
 
     reqs = list(BASE_REQS)
     reqs += [f for f in args.frameworks.split(",") if f.strip()]
@@ -215,8 +289,9 @@ def main() -> int:
         print("SKIPPED (already existed, untouched):")
         for s in skipped:
             print(f"  {s}")
-    print(f"\nDone: {len(created)} created, {len(skipped)} skipped. "
+    print(f"\nDone: {len(created)} created, {len(skipped)} skipped (track: {args.track}). "
           "Install deps with: pip install -r requirements.txt")
+    print("Next: python .hfd/scripts/context.py freeze  (locks the cacheable docs)")
     return 0
 
 

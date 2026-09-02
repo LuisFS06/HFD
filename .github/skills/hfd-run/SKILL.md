@@ -7,7 +7,18 @@ description: >
   last checkpoint after a crash or interrupted session. Use to execute or
   resume the next pending slice, or a specific slice number.
 argument-hint: "[slice N] [what changed since planning]"
+copilot-model: GPT-5.4 mini
 ---
+
+Start by loading exactly what this skill declares — no more, in this order:
+
+```
+python .hfd/scripts/context.py pack hfd-run
+```
+
+The manifest is generated from `.hfd/context.json`; the order is what keeps
+the stable inputs byte-identical between sessions, which is what makes them
+cacheable.
 
 ## Session start (cheap, script-first)
 
@@ -88,3 +99,7 @@ Load: status output + ONE slice section + referenced decisions +
 coding-standards + constitution (glossary, CCs). Do NOT load:
 blind-research, hypothesis-doc, other slices, completed-slice journal
 history, or docs/prd-slices.md in full. Never rewrite docs/prd-slices.md.
+
+This contract is machine-readable in `.hfd/context.json`:
+`context.py pack hfd-run` prints it, estimates its cost, and
+flags anything over budget.

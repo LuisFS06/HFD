@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Project state belongs to the project that installs the preset, not here
+docs/state/
+
+# Environments / editors
+.venv/
+venv/
+.idea/
+.vscode/
+.DS_Store

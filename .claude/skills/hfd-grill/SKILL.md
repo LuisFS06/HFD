@@ -7,7 +7,18 @@ description: >
   a new ML project, proposing a new hypothesis, stress-testing an existing
   one, or amending a hypothesis after new findings.
 argument-hint: "[business problem + data locations] | amend <what changed>"
+copilot-model: Claude Sonnet 4.6
 ---
+
+Start by loading exactly what this skill declares — no more, in this order:
+
+```
+python .hfd/scripts/context.py pack hfd-grill
+```
+
+The manifest is generated from `.hfd/context.json`; the order is what keeps
+the stable inputs byte-identical between sessions, which is what makes them
+cacheable.
 
 Interview the user relentlessly about their ML hypothesis until shared
 understanding is reached. One question at a time — wait for each answer.
@@ -76,3 +87,7 @@ against it — do not recreate it.
 Load: docs/constitution.md (if exists), user conversation, data
 exploration output. Templates only at write time. Do NOT load
 blind-research, design-decisions, prd-slices, or state files.
+
+This contract is machine-readable in `.hfd/context.json`:
+`context.py pack hfd-grill` prints it, estimates its cost, and
+flags anything over budget.
